@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Registro de Capacitación — Petrosar</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:'DM Sans',sans-serif;background:#f0f2f6;min-height:100vh;padding:20px}
+    .card{background:white;border-radius:16px;box-shadow:0 10px 40px rgba(0,0,0,.10);width:100%;max-width:520px;margin:auto;overflow:hidden}
+    .header{background:linear-gradient(160deg,#253445 0%,#192638 100%);padding:24px 28px 20px;display:flex;align-items:center;gap:14px}
+    .logo-wrap{width:54px;height:54px;border-radius:10px;overflow:hidden;flex-shrink:0;background:#F7C800}
+    .logo-wrap img{width:100%;height:100%;object-fit:contain}
+    .header-txt h1{font-family:'Syne',sans-serif;font-size:17px;font-weight:800;color:white}
+    .header-txt p{font-size:12px;color:rgba(255,255,255,.55);margin-top:2px}
+    .body{padding:24px 28px 28px}
+    .field{margin-bottom:16px}
+    label{display:block;font-size:12px;font-weight:600;color:#4a5568;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px}
+    input,select,textarea{width:100%;padding:10px 14px;border:1.5px solid #e2e8f0;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:14px;color:#1a202c;background:white;transition:border-color .2s}
+    input:focus,select:focus,textarea:focus{outline:none;border-color:#1e2d3e;box-shadow:0 0 0 3px rgba(26,39,68,.08)}
+    textarea{resize:vertical;min-height:80px}
+    .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    .firma-box{border:1.5px solid #e2e8f0;border-radius:8px;overflow:hidden;background:#fafafa;position:relative;touch-action:none}
+    .firma-box canvas{display:block;width:100%;height:120px;cursor:crosshair;touch-action:none}
+    .firma-placeholder{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:#cbd5e0;font-size:13px;pointer-events:none;text-align:center}
+    .firma-acciones{display:flex;justify-content:flex-end;margin-top:5px}
+    .btn-borrar{background:none;border:1px solid #e2e8f0;border-radius:6px;padding:4px 12px;font-size:11px;color:#a0aec0;cursor:pointer}
+    .btn-borrar:hover{border-color:#FF6B35;color:#FF6B35}
+    .firma-error{font-size:11px;color:#e53e3e;margin-top:3px;display:none}
+    .btn-submit{width:100%;padding:14px;background:linear-gradient(135deg,#FF6B35,#e85c2f);color:white;border:none;border-radius:10px;font-family:'DM Sans',sans-serif;font-size:15px;font-weight:600;cursor:pointer;margin-top:8px}
+    .btn-submit:disabled{opacity:.6;cursor:not-allowed}
+    #mensaje{margin-top:16px;text-align:center;font-weight:600;font-size:14px}
+    #qrContainer{text-align:center;margin-top:24px;padding:20px;background:#f7fafc;border-radius:10px;border:1.5px dashed #e2e8f0;display:none}
+    #qrContainer h3{font-family:'Syne',sans-serif;font-size:15px;color:#1e2d3e;margin-bottom:14px}
+    .back-link{display:block;text-align:center;margin-bottom:16px;font-size:13px;color:#718096;text-decoration:none}
+  </style>
+</head>
+<body>
+  <a href="index.html" class="back-link">← Volver al panel</a>
+  <div class="card">
+    <div class="header">
+      <div class="logo-wrap"><img src="data:image/png;base64,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" alt="Petrosar"></div>
+      <div class="header-txt"><h1>Registro de Capacitación</h1><p>Completá los datos del evento</p></div>
+    </div>
+    <div class="body">
+      <div class="field"><label>Tema</label>
+        <select id="tema">
+          <option value="">Seleccionar</option>
+          <option value="SSA">SSA</option><option value="AMBIENTE">AMBIENTE</option>
+          <option value="SALUD">SALUD</option><option value="TECNICA">TECNICA</option>
+          <option value="DIFUSION">DIFUSION</option><option value="ALERTA">ALERTA</option>
+          <option value="OTRO">OTRO</option>
+        </select>
+      </div>
+      <div class="field"><label>Especificar tema</label><input type="text" id="especificarTema" placeholder="Ej: Uso del cinturón de seguridad"></div>
+      <div class="field"><label>Facilitador</label><input type="text" id="facilitador" placeholder="Nombre completo del facilitador"></div>
+      <div class="field"><label>Tipo de actividad</label>
+        <select id="tipo">
+          <option value="">Seleccionar</option>
+          <option value="Capacitación">Capacitación</option>
+          <option value="Taller">Taller</option>
+          <option value="Charla">Charla</option>
+        </select>
+      </div>
+      <div class="field"><label>Lugar</label><input type="text" id="lugar" placeholder="Ej: Comodoro Rivadavia"></div>
+      <div class="field"><label>Fecha del evento</label><input type="date" id="fecha"></div>
+      <div class="grid2">
+        <div class="field"><label>Hora de inicio</label><input type="time" id="horaInicio"></div>
+        <div class="field"><label>Hora de fin</label><input type="time" id="horaFin"></div>
+      </div>
+      <div class="field"><label>Observaciones</label><textarea id="observaciones" placeholder="Opcional..."></textarea></div>
+      <div class="field">
+        <label>Firma del facilitador</label>
+        <div class="firma-box" id="firmaBoxFac">
+          <canvas id="firmaFac"></canvas>
+          <div class="firma-placeholder" id="phFac">✍ Firmá aquí con el dedo o mouse</div>
+        </div>
+        <div class="firma-acciones"><button type="button" class="btn-borrar" onclick="borrarFirma()">✕ Borrar</button></div>
+        <div class="firma-error" id="errFirmaFac">⚠ La firma es obligatoria</div>
+      </div>
+      <button class="btn-submit" id="btnSubmit" onclick="registrarCapacitacion()">Registrar capacitación</button>
+      <div id="mensaje"></div>
+      <div id="qrContainer">
+        <h3>📱 Escaneá para registrar asistencia</h3>
+        <div id="qrcode" style="display:inline-block"></div>
+        <p style="font-size:12px;color:#718096;margin-top:10px">Mostrá este QR a los participantes</p>
+      </div>
+    </div>
+  </div>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <script>
+    const SUPABASE_URL='https://vbkuoingmsuiuejisrev.supabase.co';
+    const SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZia3VvaW5nbXN1aXVlamlzcmV2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU1MTYzNjIsImV4cCI6MjEwMTA5MjM2Mn0.vK59V3Ouo2RcpdpS2z4AII7Q0GXWlx0cXXpZIIQDI8w';
+    const APP_URL=window.location.origin;
+    let hayFirmaFac=false;
+    const cvFac=document.getElementById('firmaFac'),ctxFac=cvFac.getContext('2d');
+    let drawing=false,lx=0,ly=0;
+    function ajustar(){const r=cvFac.getBoundingClientRect(),dpr=window.devicePixelRatio||1;cvFac.width=r.width*dpr;cvFac.height=r.height*dpr;ctxFac.scale(dpr,dpr);ctxFac.strokeStyle='#111';ctxFac.lineWidth=2.5;ctxFac.lineCap='round';ctxFac.lineJoin='round';}
+    setTimeout(ajustar,100);
+    function gp(e){const r=cvFac.getBoundingClientRect();return e.touches?{x:e.touches[0].clientX-r.left,y:e.touches[0].clientY-r.top}:{x:e.clientX-r.left,y:e.clientY-r.top};}
+    cvFac.addEventListener('mousedown',e=>{drawing=true;const p=gp(e);lx=p.x;ly=p.y;});
+    cvFac.addEventListener('mousemove',e=>{if(!drawing)return;const p=gp(e);ctxFac.beginPath();ctxFac.moveTo(lx,ly);ctxFac.lineTo(p.x,p.y);ctxFac.stroke();lx=p.x;ly=p.y;hayFirmaFac=true;document.getElementById('phFac').style.display='none';document.getElementById('errFirmaFac').style.display='none';});
+    cvFac.addEventListener('mouseup',()=>drawing=false);cvFac.addEventListener('mouseleave',()=>drawing=false);
+    cvFac.addEventListener('touchstart',e=>{e.preventDefault();drawing=true;const p=gp(e);lx=p.x;ly=p.y;},{passive:false});
+    cvFac.addEventListener('touchmove',e=>{e.preventDefault();if(!drawing)return;const p=gp(e);ctxFac.beginPath();ctxFac.moveTo(lx,ly);ctxFac.lineTo(p.x,p.y);ctxFac.stroke();lx=p.x;ly=p.y;hayFirmaFac=true;document.getElementById('phFac').style.display='none';},{passive:false});
+    cvFac.addEventListener('touchend',()=>drawing=false);
+    function borrarFirma(){ctxFac.clearRect(0,0,cvFac.width,cvFac.height);hayFirmaFac=false;document.getElementById('phFac').style.display='block';}
+
+    function comprimirFirma(canvas){
+      const tmp=document.createElement('canvas');
+      tmp.width=200;tmp.height=70;
+      const t=tmp.getContext('2d');
+      t.fillStyle='#fff';t.fillRect(0,0,200,70);
+      t.drawImage(canvas,0,0,200,70);
+      return tmp.toDataURL('image/jpeg',0.3);
+    }
+
+    async function registrarCapacitacion(){
+      const tema=document.getElementById('tema').value;
+      const espTema=document.getElementById('especificarTema').value.trim();
+      const facil=document.getElementById('facilitador').value.trim();
+      const tipo=document.getElementById('tipo').value;
+      const lugar=document.getElementById('lugar').value.trim();
+      const fecha=document.getElementById('fecha').value;
+      const hIni=document.getElementById('horaInicio').value;
+      const hFin=document.getElementById('horaFin').value;
+      const msg=document.getElementById('mensaje');
+
+      if(!tema||!facil||!tipo||!lugar||!fecha||!hIni||!hFin){
+        msg.innerHTML='⚠ Completá todos los campos.';msg.style.color='#e53e3e';return;
+      }
+      if(!hayFirmaFac){
+        document.getElementById('errFirmaFac').style.display='block';
+        cvFac.scrollIntoView({behavior:'smooth',block:'center'});return;
+      }
+
+      const firmaFacB64=comprimirFirma(cvFac);
+      const btn=document.getElementById('btnSubmit');
+      btn.disabled=true;btn.textContent='Registrando...';
+      msg.innerHTML='';
+
+      try {
+        // Insertar en Supabase
+        const res=await fetch(`${SUPABASE_URL}/rest/v1/capacitaciones`,{
+          method:'POST',
+          headers:{
+            apikey:SUPABASE_KEY,Authorization:`Bearer ${SUPABASE_KEY}`,
+            'Content-Type':'application/json',Prefer:'return=representation'
+          },
+          body:JSON.stringify({
+            tema, esp_tema:espTema, area:tema,
+            facilitador:facil, tipo, lugar,
+            fecha_evento:fecha, hora_inicio:hIni, hora_fin:hFin,
+            firma_facilitador:firmaFacB64
+          })
+        });
+        if(!res.ok) throw new Error(await res.text());
+        const data=await res.json();
+        const capId=data[0].id;
+
+        // Generar QR con el ID de Supabase
+        const qrParams=new URLSearchParams({
+          capacitacion_id:capId,tema,especificarTema:espTema,
+          facilitador:facil,tipo,lugar,fecha,horaInicio:hIni,horaFin:hFin
+        }).toString();
+
+        msg.innerHTML='✅ Capacitación registrada.';msg.style.color='#38a169';
+        document.getElementById('qrContainer').style.display='block';
+        document.getElementById('qrcode').innerHTML='';
+        new QRCode(document.getElementById('qrcode'),{
+          text:APP_URL+'/form-empleado.html?'+qrParams,
+          width:200,height:200
+        });
+      } catch(err){
+        msg.innerHTML='❌ Error al registrar: '+err.message;msg.style.color='#e53e3e';
+      }
+      btn.disabled=false;btn.textContent='Registrar capacitación';
+    }
+  </script>
+</body>
+</html>
