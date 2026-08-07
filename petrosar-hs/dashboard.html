@@ -565,61 +565,96 @@ let CRONOGRAMA_EDIT = JSON.parse(JSON.stringify(CRONOGRAMA_INICIAL));
 const MESES_CRON = ["", "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
 const AREA_STYLE = {SSA:'background:#dbeafe;color:#1e40af',MA:'background:#d1fae5;color:#065f46',SO:'background:#fef3c7;color:#92400e',Difusion:'background:#fce7f3;color:#9d174d',Tecnica:'background:#ede9fe;color:#5b21b6'};
 
-function abrirCronograma() {
+async function abrirCronograma() {
   document.getElementById('cronogramaModal').style.display = 'block';
+  document.getElementById('cronogramaBody').innerHTML = '<div style="text-align:center;padding:30px;color:#6b7280">Cargando datos...</div>';
+  // Cargar todas las capacitaciones dictadas del año seleccionado
+  const anio = parseInt(document.getElementById('selAnio').value) || 2026;
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/capacitaciones?fecha_evento=gte.${anio}-01-01&fecha_evento=lte.${anio}-12-31&select=tema,esp_tema,area,fecha_evento&limit=1000`, {
+    headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
+  });
+  window.CAPS_DICTADAS = await res.json();
   renderCronograma();
+}
+
+function temaFueDictado(mes, tema, area) {
+  // Busca si existe alguna capacitación dictada ese mes con ese tema (coincidencia parcial)
+  const anio = parseInt(document.getElementById('selAnio').value) || 2026;
+  const mesStr = String(mes).padStart(2,'0');
+  const prefijo = `${anio}-${mesStr}`;
+  const temaLow = tema.toLowerCase();
+  return (window.CAPS_DICTADAS || []).some(c => {
+    if (!c.fecha_evento || !c.fecha_evento.startsWith(prefijo)) return false;
+    const espLow = (c.esp_tema || '').toLowerCase();
+    const temaCapLow = (c.tema || '').toLowerCase();
+    // Coincidencia: primeras 15 chars del tema programado en el tema/esp_tema dictado
+    const clave = temaLow.substring(0, 20);
+    return espLow.includes(clave) || temaCapLow.includes(clave) ||
+           clave.includes(espLow.substring(0,15)) || temaLow.includes(espLow.substring(0,15));
+  });
 }
 
 function renderCronograma() {
   const filtMes = parseInt(document.getElementById('cronSelMes').value);
   const meses = filtMes === 0 ? Object.keys(CRONOGRAMA_EDIT).map(Number) : [filtMes];
-  let html = '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px">';
+
+  // Calcular % cumplimiento global y por mes
+  let totalTemas = 0, totalDictados = 0;
+  const pctPorMes = {};
   meses.forEach(mes => {
     const temas = CRONOGRAMA_EDIT[mes] || [];
+    const dictados = temas.filter(t => temaFueDictado(mes, t[0], t[1])).length;
+    totalTemas += temas.length;
+    totalDictados += dictados;
+    pctPorMes[mes] = temas.length ? Math.round(dictados / temas.length * 100) : 0;
+  });
+  const pctGlobal = totalTemas ? Math.round(totalDictados / totalTemas * 100) : 0;
+  const pctColor = p => p >= 80 ? '#16a34a' : p >= 50 ? '#d97706' : '#dc2626';
+
+  let html = '';
+  // Resumen global
+  html += `<div style="display:flex;align-items:center;gap:16px;padding:12px 16px;background:#f8f9fb;border-radius:8px;margin-bottom:14px;border:1px solid #e4e6ea">
+    <div style="text-align:center">
+      <div style="font-size:28px;font-weight:700;color:${pctColor(pctGlobal)}">${pctGlobal}%</div>
+      <div style="font-size:10px;color:#6b7280;text-transform:uppercase;letter-spacing:.5px">Cumplimiento del programa</div>
+    </div>
+    <div style="flex:1;height:8px;background:#e4e6ea;border-radius:4px;overflow:hidden">
+      <div style="height:8px;border-radius:4px;background:${pctColor(pctGlobal)};width:${pctGlobal}%;transition:width .4s"></div>
+    </div>
+    <div style="font-size:12px;color:#6b7280">${totalDictados}/${totalTemas} temas dictados</div>
+  </div>`;
+
+  html += '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px">';
+  meses.forEach(mes => {
+    const temas = CRONOGRAMA_EDIT[mes] || [];
+    const pct = pctPorMes[mes];
+    const dictados = temas.filter(t => temaFueDictado(mes, t[0], t[1])).length;
     html += `<div style="background:#f8f9fb;border-radius:8px;padding:12px;border:1px solid #e4e6ea">
-      <div style="font-weight:600;font-size:12px;color:#1e2d3e;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between">
-        <span>${MESES_CRON[mes]}</span>
-        <span style="font-size:10px;color:#6b7280">${temas.length} temas</span>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+        <span style="font-weight:600;font-size:12px;color:#1e2d3e">${MESES_CRON[mes]}</span>
+        <span style="font-size:11px;font-weight:700;color:${pctColor(pct)}">${pct}% (${dictados}/${temas.length})</span>
       </div>
-      ${temas.map((t,i) => `
-        <div style="display:flex;align-items:center;gap:6px;padding:5px 0;border-bottom:1px solid #e4e6ea" id="cron-${mes}-${i}">
-          <span style="font-size:10px;padding:2px 6px;border-radius:10px;font-weight:600;flex-shrink:0;${AREA_STYLE[t[1]]||'background:#f0f2f5;color:#6b7280'}">${t[1]}</span>
-          <span style="font-size:12px;color:#111;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${t[0]}">${t[0]}</span>
-          <button onclick="editarTema(${mes},${i})" style="background:none;border:none;color:#6b7280;cursor:pointer;font-size:13px;padding:2px 4px;flex-shrink:0">✏</button>
-          <button onclick="eliminarTema(${mes},${i})" style="background:none;border:none;color:#dc2626;cursor:pointer;font-size:13px;padding:2px 4px;flex-shrink:0">✕</button>
-        </div>`).join('')}
+      <div style="height:4px;background:#e4e6ea;border-radius:2px;margin-bottom:8px;overflow:hidden">
+        <div style="height:4px;background:${pctColor(pct)};width:${pct}%;border-radius:2px"></div>
+      </div>
+      ${temas.map((t,i) => {
+        const dictado = temaFueDictado(mes, t[0], t[1]);
+        const areaStyle = AREA_STYLE[t[1]] || 'background:#f0f2f5;color:#6b7280';
+        const estadoIcon = dictado ? '✅' : '⬜';
+        const estadoStyle = dictado ? 'opacity:1' : 'opacity:.6';
+        return `<div style="display:flex;align-items:center;gap:6px;padding:5px 0;border-bottom:1px solid #e4e6ea;${estadoStyle}">
+          <span style="font-size:14px;flex-shrink:0">${estadoIcon}</span>
+          <span style="font-size:10px;padding:2px 6px;border-radius:10px;font-weight:600;flex-shrink:0;${areaStyle}">${t[1]}</span>
+          <span style="font-size:11px;color:#111;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${t[0]}">${t[0]}</span>
+          <button onclick="editarTema(${mes},${i})" style="background:none;border:none;color:#6b7280;cursor:pointer;font-size:12px;padding:2px;flex-shrink:0">✏</button>
+          <button onclick="eliminarTema(${mes},${i})" style="background:none;border:none;color:#dc2626;cursor:pointer;font-size:12px;padding:2px;flex-shrink:0">✕</button>
+        </div>`;
+      }).join('')}
       <button onclick="agregarTema(${mes})" style="width:100%;margin-top:8px;padding:5px;background:none;border:1px dashed #cbd5e0;border-radius:6px;color:#6b7280;font-size:11px;cursor:pointer">+ Agregar tema</button>
     </div>`;
   });
   html += '</div>';
   document.getElementById('cronogramaBody').innerHTML = html;
-}
-
-function editarTema(mes, idx) {
-  const t = CRONOGRAMA_EDIT[mes][idx];
-  const nuevoTema = prompt('Editar tema:', t[0]);
-  if (nuevoTema === null) return;
-  const nuevaArea = prompt('Área (SSA / MA / SO / Difusion / Tecnica):', t[1]);
-  if (nuevaArea === null) return;
-  CRONOGRAMA_EDIT[mes][idx] = [nuevoTema.trim(), nuevaArea.trim()];
-  guardarCronogramaSupabase(mes, idx, nuevoTema.trim(), nuevaArea.trim());
-  renderCronograma();
-}
-
-function eliminarTema(mes, idx) {
-  if (!confirm('¿Eliminar este tema del cronograma?')) return;
-  CRONOGRAMA_EDIT[mes].splice(idx, 1);
-  renderCronograma();
-}
-
-function agregarTema(mes) {
-  const nuevoTema = prompt('Nuevo tema:');
-  if (!nuevoTema) return;
-  const nuevaArea = prompt('Área (SSA / MA / SO / Difusion / Tecnica):', 'SSA');
-  if (!nuevaArea) return;
-  CRONOGRAMA_EDIT[mes].push([nuevoTema.trim(), nuevaArea.trim()]);
-  guardarCronogramaSupabase(mes, null, nuevoTema.trim(), nuevaArea.trim(), true);
-  renderCronograma();
 }
 
 async function guardarCronogramaSupabase(mes, idx, tema, area, esNuevo = false) {
