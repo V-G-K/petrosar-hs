@@ -117,18 +117,19 @@
     let personaSeleccionada = null; // {dni, nombre, tarea, contrato} o null
     let modoNuevo = false;
 
-    // Cargar padrón al iniciar
-    (function cargarPadron(){
-      const s = document.createElement('script');
-      const cb = 'padron_'+Date.now();
-      window[cb] = function(data){
-        delete window[cb];
-        if(data.status==='success' && data.personal){
-          PADRON = data.personal;
-        }
-      };
-      s.src = SCRIPT_URL + '?accion=getDashboard&callback='+cb;
-      document.body.appendChild(s);
+    const SUPABASE_URL = 'https://vbkuoingmsuiuejisrev.supabase.co';
+    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZia3VvaW5nbXN1aXVlamlzcmV2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU1MTYzNjIsImV4cCI6MjEwMTA5MjM2Mn0.vK59V3Ouo2RcpdpS2z4AII7Q0GXWlx0cXXpZIIQDI8w';
+
+    // Cargar padrón desde Supabase
+    (async function cargarPadron(){
+      try {
+        const res = await fetch(SUPABASE_URL+'/rest/v1/personal?activo=eq.true&select=dni,nombre,tarea,contrato&order=nombre.asc&limit=1000', {
+          headers: { apikey: SUPABASE_KEY, Authorization: 'Bearer '+SUPABASE_KEY }
+        });
+        PADRON = await res.json();
+      } catch(e) {
+        console.error('Error cargando padron:', e);
+      }
     })();
 
     // ── Buscador ─────────────────────────────────────────────────
