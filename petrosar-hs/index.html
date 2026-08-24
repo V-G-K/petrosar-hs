@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Panel de Capacitación — Petrosar</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:'DM Sans',sans-serif;background:#f0f2f6;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+    .card{background:white;border-radius:16px;box-shadow:0 10px 40px rgba(0,0,0,.10);width:100%;max-width:420px;overflow:hidden}
+    .header{background:linear-gradient(160deg,#253445 0%,#192638 100%);padding:32px 28px 28px;text-align:center}
+    .logo-wrap{width:90px;height:90px;border-radius:14px;overflow:hidden;margin:0 auto 18px;background:#F7C800}
+    .logo-wrap img{width:100%;height:100%;object-fit:contain}
+    .header h1{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:white;margin-bottom:6px}
+    .header p{font-size:13px;color:rgba(255,255,255,.6)}
+    .body{padding:28px}
+    .btn{display:flex;align-items:center;gap:12px;width:100%;padding:16px 20px;border:none;border-radius:10px;font-family:'DM Sans',sans-serif;font-size:15px;font-weight:600;cursor:pointer;text-decoration:none;margin-bottom:12px;transition:transform .15s,box-shadow .15s}
+    .btn:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(0,0,0,.15)}
+    .btn:last-child{margin-bottom:0}
+    .btn-icon{width:38px;height:38px;border-radius:8px;background:rgba(255,255,255,.25);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+    .btn-green{background:linear-gradient(135deg,#38a169,#2f855a);color:white}
+    .btn-orange{background:linear-gradient(135deg,#FF6B35,#e85c2f);color:white}
+    .btn-blue{background:linear-gradient(135deg,#3182ce,#2b6cb0);color:white}
+    .footer-txt{text-align:center;font-size:11px;color:#a0aec0;margin-top:20px;padding-bottom:4px}
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="header">
+      <div class="logo-wrap"><img src="data:image/png;base64,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" alt="Petrosar"></div>
+      <h1>Panel de Capacitación</h1>
+      <p>Gestioná eventos, registros y estadísticas de capacitación</p>
+    </div>
+    <div class="body">
+      <a href="form-facilitador.html" class="btn btn-green">
+        <div class="btn-icon">✅</div><span>Crear nueva capacitación</span>
+      </a>
+      
+      <a href="dashboard.html" class="btn btn-blue">
+        <div class="btn-icon">📘</div><span>Ver dashboard estadístico</span>
+      </a>
+      <div class="footer-txt">RG-P-02-03 - REV 03 | Sistema Digital de Capacitación</div>
+    </div>
+  </div>
+</body>
+</html>
