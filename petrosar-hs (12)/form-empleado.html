@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Registro de Asistencia — Petrosar</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:'DM Sans',sans-serif;background:#f0f2f6;min-height:100vh;padding:20px}
+    .card{background:white;border-radius:16px;box-shadow:0 10px 40px rgba(0,0,0,.10);width:100%;max-width:520px;margin:auto;overflow:hidden}
+    .header{background:linear-gradient(160deg,#253445 0%,#192638 100%);padding:24px 28px 20px;display:flex;align-items:center;gap:14px}
+    .logo-wrap{width:54px;height:54px;border-radius:10px;overflow:hidden;flex-shrink:0;background:#F7C800}
+    .logo-wrap img{width:100%;height:100%;object-fit:contain}
+    .header-txt h1{font-family:'Syne',sans-serif;font-size:17px;font-weight:800;color:white}
+    .header-txt p{font-size:12px;color:rgba(255,255,255,.55);margin-top:2px}
+    .body{padding:24px 28px 28px}
+    .info-box{background:#fff8e1;border-left:4px solid #F7C800;border-radius:0 8px 8px 0;padding:12px 14px;margin-bottom:20px;font-size:13px;line-height:1.8;color:#4a5568}
+    .info-box strong{color:#1e2d3e}
+    .field{margin-bottom:16px;position:relative}
+    label{display:block;font-size:12px;font-weight:600;color:#4a5568;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px}
+    input[type="text"]{width:100%;padding:10px 14px;border:1.5px solid #e2e8f0;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:15px;color:#1a202c;background:white;transition:border-color .2s}
+    input[type="text"]:focus{outline:none;border-color:#1e2d3e;box-shadow:0 0 0 3px rgba(26,39,68,.08)}
+    /* Autocomplete */
+    .suggest-list{position:absolute;top:100%;left:0;right:0;background:white;border:1.5px solid #e2e8f0;border-radius:0 0 8px 8px;box-shadow:0 8px 24px rgba(0,0,0,.10);z-index:200;max-height:220px;overflow-y:auto;margin-top:-2px}
+    .suggest-item{padding:10px 14px;cursor:pointer;font-size:14px;color:#1a202c;border-bottom:1px solid #f0f2f6;display:flex;flex-direction:column;gap:2px}
+    .suggest-item:last-child{border-bottom:none}
+    .suggest-item:hover,.suggest-item.active{background:#f0f8ff}
+    .suggest-item .si-nombre{font-weight:600}
+    .suggest-item .si-detalle{font-size:11px;color:#718096}
+    .suggest-nuevo{padding:10px 14px;cursor:pointer;font-size:13px;color:#D85A30;font-weight:600;border-top:1px solid #e2e8f0}
+    .suggest-nuevo:hover{background:#fff5f0}
+    /* Tag persona seleccionada */
+    .tag-persona{display:flex;align-items:center;gap:8px;background:#f0fff4;border:1.5px solid #9ae6b4;border-radius:8px;padding:10px 14px;margin-bottom:16px;font-size:14px;color:#276749}
+    .tag-persona .tag-nombre{font-weight:600}
+    .tag-persona .tag-detalle{font-size:11px;color:#4a5568;margin-top:1px}
+    .tag-persona button{margin-left:auto;background:none;border:none;color:#9b2c2c;cursor:pointer;font-size:18px;line-height:1;padding:0 2px}
+    .aviso-nuevo{background:#fff8e1;border-left:4px solid #F7C800;border-radius:0 8px 8px 0;padding:10px 14px;margin-bottom:14px;font-size:12px;color:#4a5568}
+    /* Firma */
+    .firma-box{border:1.5px solid #e2e8f0;border-radius:8px;overflow:hidden;background:#fafafa;position:relative;touch-action:none}
+    .firma-box canvas{display:block;width:100%;height:130px;cursor:crosshair;touch-action:none}
+    .firma-placeholder{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:#cbd5e0;font-size:13px;pointer-events:none;text-align:center;line-height:1.6}
+    .firma-acciones{display:flex;justify-content:flex-end;margin-top:5px}
+    .btn-borrar{background:none;border:1px solid #e2e8f0;border-radius:6px;padding:4px 12px;font-size:11px;color:#a0aec0;cursor:pointer}
+    .btn-borrar:hover{border-color:#FF6B35;color:#FF6B35}
+    .firma-error{font-size:11px;color:#e53e3e;margin-top:3px;display:none}
+    .btn-submit{width:100%;padding:14px;background:linear-gradient(135deg,#FF6B35,#e85c2f);color:white;border:none;border-radius:10px;font-family:'DM Sans',sans-serif;font-size:15px;font-weight:600;cursor:pointer;margin-top:8px}
+    .btn-submit:disabled{opacity:.6;cursor:not-allowed}
+    #mensaje{margin-top:16px;text-align:center;font-weight:600;font-size:15px;padding:12px;border-radius:8px}
+    .msg-ok{background:#f0fff4;color:#276749}
+    .msg-warn{background:#fffbeb;color:#92400e}
+    .msg-err{background:#fff5f5;color:#9b2c2c}
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="header">
+      <div class="logo-wrap"><img src="data:image/png;base64,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" alt="Petrosar" style="width:100%;height:100%;object-fit:contain"></div>
+      <div class="header-txt"><h1>Registro de Asistencia</h1><p>Completá tus datos para registrar la asistencia</p></div>
+    </div>
+    <div class="body">
+      <div class="info-box" id="infoCapacitacion"></div>
+
+      <!-- Buscador del padrón -->
+      <div class="field" id="campoBusqueda">
+        <label>Buscar por nombre o DNI</label>
+        <input type="text" id="busqueda" placeholder="Escribí tu nombre o DNI..." autocomplete="off">
+        <div id="sugerencias"></div>
+      </div>
+
+      <!-- Tag persona seleccionada del padrón -->
+      <div id="tagPersonaWrap" style="display:none">
+        <div class="tag-persona">
+          <div>
+            <div class="tag-nombre" id="tagNombre"></div>
+            <div class="tag-detalle" id="tagDetalle"></div>
+          </div>
+          <button type="button" onclick="limpiarPersona()">✕</button>
+        </div>
+        <input type="hidden" id="dni">
+        <input type="hidden" id="nombre">
+        <input type="hidden" id="cargo" value="—">
+      </div>
+
+      <!-- Modo persona nueva (no está en el padrón) -->
+      <div id="camposNuevo" style="display:none">
+        <div class="aviso-nuevo">⚠ No encontrado en el padrón. Completá los datos manualmente — el contrato se asignará cuando seas dado de alta.</div>
+        <div class="field"><label>DNI</label><input type="text" id="dniNuevo" maxlength="8" placeholder="Ej: 28403375" inputmode="numeric"></div>
+        <div class="field"><label>Nombre completo</label><input type="text" id="nombreNuevo" placeholder="Apellido y nombre"></div>
+        <input type="hidden" id="cargo" value="—">
+      </div>
+
+      <div class="field">
+        <label>Firma del participante</label>
+        <div class="firma-box" id="firmaBoxEmp">
+          <canvas id="firmaEmp"></canvas>
+          <div class="firma-placeholder" id="phEmp">✍ Dibujá tu firma<br>con el dedo o mouse</div>
+        </div>
+        <div class="firma-acciones"><button type="button" class="btn-borrar" onclick="borrarFirma()">✕ Borrar firma</button></div>
+        <div class="firma-error" id="errFirmaEmp">⚠ La firma es obligatoria</div>
+      </div>
+      <button class="btn-submit" id="btnSubmit" onclick="registrar()">Registrar asistencia</button>
+      <div id="mensaje"></div>
+    </div>
+  </div>
+  <script>
+    const SCRIPT_URL='https://script.google.com/macros/s/AKfycbwWX8ayYGzREG5tfxxbyEN895yCxrTgbOD5tG3jHDz8LYApUi6RP4-x3UYVxurDP4hk/exec';
+    const qp=new URLSearchParams(window.location.search);
+    const campos=['capacitacion_id','tema','especificarTema','facilitador','tipo','lugar','fecha','horaInicio','horaFin'];
+    const labels={tema:'Tema',especificarTema:'Tema específico',facilitador:'Facilitador',tipo:'Tipo',lugar:'Lugar',fecha:'Fecha',horaInicio:'Hora inicio',horaFin:'Hora fin'};
+    const vals={};let resumen='';
+    campos.forEach(c=>{vals[c]=qp.get(c)||'';if(c!=='idCapacitacion'&&vals[c])resumen+='<strong>'+labels[c]+':</strong> '+vals[c]+'<br>';});
+    document.getElementById('infoCapacitacion').innerHTML='🧑‍🏫 <strong>Capacitación</strong><br>'+resumen;
+
+    // ── Padrón ────────────────────────────────────────────────────
+    let PADRON = [];
+    let personaSeleccionada = null; // {dni, nombre, tarea, contrato} o null
+    let modoNuevo = false;
+
+    const SUPABASE_URL = 'https://vbkuoingmsuiuejisrev.supabase.co';
+    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZia3VvaW5nbXN1aXVlamlzcmV2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU1MTYzNjIsImV4cCI6MjEwMTA5MjM2Mn0.vK59V3Ouo2RcpdpS2z4AII7Q0GXWlx0cXXpZIIQDI8w';
+
+    // Cargar padrón desde Supabase
+    (async function cargarPadron(){
+      try {
+        const res = await fetch(SUPABASE_URL+'/rest/v1/personal?activo=eq.true&select=dni,nombre,tarea,contrato&order=nombre.asc&limit=1000', {
+          headers: { apikey: SUPABASE_KEY, Authorization: 'Bearer '+SUPABASE_KEY }
+        });
+        PADRON = await res.json();
+      } catch(e) {
+        console.error('Error cargando padron:', e);
+      }
+    })();
+
+    // ── Buscador ─────────────────────────────────────────────────
+    const inputBusq = document.getElementById('busqueda');
+    inputBusq.addEventListener('input', function(){
+      const q = this.value.trim().toLowerCase();
+      const wrap = document.getElementById('sugerencias');
+      if(q.length < 2){ wrap.innerHTML=''; return; }
+
+      const resultados = PADRON.filter(p =>
+        p.nombre.toLowerCase().includes(q) || p.dni.includes(q)
+      ).slice(0, 8);
+
+      let html = '<div class="suggest-list">';
+      resultados.forEach((p, i) => {
+        html += `<div class="suggest-item" onclick="seleccionarPersona(${i},'${p.dni}','${p.nombre.replace(/'/g,"\\'")}','${p.tarea.replace(/'/g,"\\'")}','${p.contrato.replace(/'/g,"\\'")}')">
+          <span class="si-nombre">${p.nombre}</span>
+          <span class="si-detalle">DNI: ${p.dni} · ${p.contrato}</span>
+        </div>`;
+      });
+      html += `<div class="suggest-nuevo" onclick="activarModoNuevo()">➕ No estoy en la lista — ingresar manualmente</div>`;
+      html += '</div>';
+      wrap.innerHTML = html;
+    });
+
+    // Cerrar sugerencias al hacer click afuera
+    document.addEventListener('click', function(e){
+      if(!document.getElementById('campoBusqueda').contains(e.target)){
+        document.getElementById('sugerencias').innerHTML='';
+      }
+    });
+
+    function seleccionarPersona(idx, dni, nombre, tarea, contrato){
+      personaSeleccionada = {dni, nombre, tarea, contrato};
+      modoNuevo = false;
+      // Ocultar buscador, mostrar tag
+      document.getElementById('campoBusqueda').style.display='none';
+      document.getElementById('sugerencias').innerHTML='';
+      document.getElementById('tagPersonaWrap').style.display='block';
+      document.getElementById('camposNuevo').style.display='none';
+      document.getElementById('tagNombre').textContent = nombre;
+      document.getElementById('tagDetalle').textContent = 'DNI: '+dni+' · '+contrato;
+      document.getElementById('dni').value = dni;
+      document.getElementById('nombre').value = nombre;
+    }
+
+    function activarModoNuevo(){
+      personaSeleccionada = null;
+      modoNuevo = true;
+      document.getElementById('campoBusqueda').style.display='none';
+      document.getElementById('sugerencias').innerHTML='';
+      document.getElementById('tagPersonaWrap').style.display='none';
+      document.getElementById('camposNuevo').style.display='block';
+    }
+
+    function limpiarPersona(){
+      personaSeleccionada = null;
+      modoNuevo = false;
+      document.getElementById('campoBusqueda').style.display='block';
+      document.getElementById('busqueda').value='';
+      document.getElementById('tagPersonaWrap').style.display='none';
+      document.getElementById('camposNuevo').style.display='none';
+      document.getElementById('dniNuevo') && (document.getElementById('dniNuevo').value='');
+      document.getElementById('nombreNuevo') && (document.getElementById('nombreNuevo').value='');
+    }
+
+    // ── Firma ─────────────────────────────────────────────────────
+    let hayFirma=false;
+    const cv=document.getElementById('firmaEmp'),ctx=cv.getContext('2d');
+    let drawing=false,lx=0,ly=0;
+    function ajustar(){const r=cv.getBoundingClientRect(),dpr=window.devicePixelRatio||1;cv.width=r.width*dpr;cv.height=r.height*dpr;ctx.scale(dpr,dpr);ctx.strokeStyle='#111';ctx.lineWidth=2.5;ctx.lineCap='round';ctx.lineJoin='round';}
+    setTimeout(ajustar,100);
+    function gp(e){const r=cv.getBoundingClientRect();return e.touches?{x:e.touches[0].clientX-r.left,y:e.touches[0].clientY-r.top}:{x:e.clientX-r.left,y:e.clientY-r.top};}
+    cv.addEventListener('mousedown',e=>{drawing=true;const p=gp(e);lx=p.x;ly=p.y;});
+    cv.addEventListener('mousemove',e=>{if(!drawing)return;const p=gp(e);ctx.beginPath();ctx.moveTo(lx,ly);ctx.lineTo(p.x,p.y);ctx.stroke();lx=p.x;ly=p.y;hayFirma=true;document.getElementById('phEmp').style.display='none';document.getElementById('errFirmaEmp').style.display='none';});
+    cv.addEventListener('mouseup',()=>drawing=false);cv.addEventListener('mouseleave',()=>drawing=false);
+    cv.addEventListener('touchstart',e=>{e.preventDefault();drawing=true;const p=gp(e);lx=p.x;ly=p.y;},{passive:false});
+    cv.addEventListener('touchmove',e=>{e.preventDefault();if(!drawing)return;const p=gp(e);ctx.beginPath();ctx.moveTo(lx,ly);ctx.lineTo(p.x,p.y);ctx.stroke();lx=p.x;ly=p.y;hayFirma=true;document.getElementById('phEmp').style.display='none';document.getElementById('errFirmaEmp').style.display='none';},{passive:false});
+    cv.addEventListener('touchend',()=>drawing=false);
+    function borrarFirma(){ctx.clearRect(0,0,cv.width,cv.height);hayFirma=false;document.getElementById('phEmp').style.display='block';}
+
+    function comprimirFirma(canvas){
+      const tmp=document.createElement('canvas');
+      tmp.width=200;tmp.height=70;
+      const t=tmp.getContext('2d');
+      t.fillStyle='#fff';t.fillRect(0,0,200,70);
+      t.drawImage(canvas,0,0,200,70);
+      return tmp.toDataURL('image/jpeg',0.3);
+    }
+
+    function enviarJSONP(params,onSuccess,onError){
+      const cbName='ps_'+Date.now()+'_'+Math.floor(Math.random()*9999);
+      const script=document.createElement('script');
+      const timer=setTimeout(()=>{delete window[cbName];if(script.parentNode)document.body.removeChild(script);onError('Timeout');},20000);
+      window[cbName]=function(data){clearTimeout(timer);delete window[cbName];if(script.parentNode)document.body.removeChild(script);onSuccess(data);};
+      params.callback=cbName;
+      script.src=SCRIPT_URL+'?'+new URLSearchParams(params).toString();
+      script.onerror=()=>{clearTimeout(timer);delete window[cbName];onError('Error');};
+      document.body.appendChild(script);
+    }
+
+    async function registrar(){
+      const msg=document.getElementById('mensaje');
+
+      // Obtener DNI y nombre según el modo
+      let dni, nombre, cargo='—';
+      if(personaSeleccionada){
+        dni = personaSeleccionada.dni;
+        nombre = personaSeleccionada.nombre;
+        cargo = personaSeleccionada.tarea || '—';
+      } else if(modoNuevo){
+        dni = (document.getElementById('dniNuevo').value||'').trim();
+        nombre = (document.getElementById('nombreNuevo').value||'').trim();
+        if(!dni||!nombre){msg.className='msg-err';msg.innerHTML='⚠ Completá DNI y nombre.';return;}
+      } else {
+        msg.className='msg-err';msg.innerHTML='⚠ Buscá tu nombre o DNI para continuar.';return;
+      }
+
+      if(!hayFirma){document.getElementById('errFirmaEmp').style.display='block';document.getElementById('firmaBoxEmp').style.borderColor='#e53e3e';cv.scrollIntoView({behavior:'smooth',block:'center'});return;}
+
+      const ahora=new Date();
+      const hora=String(ahora.getHours()).padStart(2,'0')+':'+String(ahora.getMinutes()).padStart(2,'0');
+      const firmaPartB64=comprimirFirma(cv);
+      const btn=document.getElementById('btnSubmit');
+      btn.disabled=true;btn.textContent='Enviando...';
+      msg.className='';msg.innerHTML='';
+
+      // Registrar asistencia en Supabase
+      const SUPABASE_URL='https://vbkuoingmsuiuejisrev.supabase.co';
+      const SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZia3VvaW5nbXN1aXVlamlzcmV2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU1MTYzNjIsImV4cCI6MjEwMTA5MjM2Mn0.vK59V3Ouo2RcpdpS2z4AII7Q0GXWlx0cXXpZIIQDI8w';
+
+      try {
+        // Verificar duplicado
+        const checkRes = await fetch(
+          `${SUPABASE_URL}/rest/v1/asistencias?capacitacion_id=eq.${vals.capacitacion_id}&dni=eq.${dni}&select=id`,
+          { headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` } }
+        );
+        const existing = await checkRes.json();
+        if (existing.length > 0) {
+          msg.className='msg-warn'; msg.innerHTML='⚠️ Ya registraste tu asistencia a esta capacitación.';
+          btn.disabled=false; btn.textContent='Registrar asistencia'; return;
+        }
+
+        // Insertar asistencia
+        const insertRes = await fetch(`${SUPABASE_URL}/rest/v1/asistencias`, {
+          method: 'POST',
+          headers: {
+            apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`,
+            'Content-Type': 'application/json', Prefer: 'return=minimal'
+          },
+          body: JSON.stringify({
+            capacitacion_id: vals.capacitacion_id,
+            dni, nombre_registrado: nombre, cargo,
+            firma_participante: firmaPartB64
+          })
+        });
+
+        if (!insertRes.ok) throw new Error(await insertRes.text());
+
+        msg.className='msg-ok'; msg.innerHTML='✅ Asistencia registrada correctamente.';
+        limpiarPersona(); borrarFirma();
+      } catch(err) {
+        msg.className='msg-err'; msg.innerHTML='❌ Error: ' + err.message;
+      }
+      btn.disabled=false; btn.textContent='Registrar asistencia';
+    }
+  </script>
+</body>
+</html>
